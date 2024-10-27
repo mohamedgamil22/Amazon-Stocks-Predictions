@@ -1,21 +1,5 @@
-Current Plan is:
+# Project Plan is:
 
-## Stage #1:  Focused on ML orchesteration, monitoring, deployment and visualization of the predictions.
-
-Use Amazon Managed Airflow for Orchesteration, SageMaker for model training and deployment, simple Ingestion Pipeline ( Lambda -> S3)
-
-
-## Stage #2: focused on IaC
-
-Github as the main code repo to store Terraform templates, and Airflow DAGS.
-
-CodePipeline + CodeBuild to automate deployment of Terraform templates, and Airflow DAGS. 
-
-## Stage #3: focused on Data Pipeline improvements. 
-
-Use EMR Serverless, or Glue for Ingestion Pipeline.
-
-- 
 
 ## **Stage #1: ML Orchestration, Monitoring, Deployment, and Visualization**
 -------------------------------------------------------------------------

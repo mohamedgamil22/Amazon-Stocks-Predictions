@@ -1,151 +1,150 @@
-# Project Plan is:
+# Amazon Stock Price Analysis and ML Pipeline Project
 
+This project implements a comprehensive machine learning pipeline for Amazon (AMZN) stock price analysis and prediction using AWS services. The project is structured in multiple stages, from data collection and exploration to advanced ML orchestration and deployment.
 
-## **Stage #1: ML Orchestration, Monitoring, Deployment, and Visualization**
--------------------------------------------------------------------------
+## Project Overview
 
-### Goal: Set up a working ML pipeline with Amazon Managed Airflow, SageMaker for model deployment, and basic monitoring.
+The project focuses on building an end-to-end ML pipeline that:
+- Collects and processes Amazon stock price data
+- Performs comprehensive data exploration and analysis
+- Implements predictive models using LSTM for stock price forecasting
+- Deploys the solution using AWS cloud services with proper orchestration
 
-#### **Tasks:**
+## Dataset
 
-1.  **Orchestration Setup with MWAA (Managed Airflow)**
-    
-    *   Set up an S3 bucket for storing Airflow DAGs.
-        
-    *   Deploy a Managed Airflow environment on AWS.
-        
-    *   Write initial Airflow DAGs to orchestrate data ingestion, training, and deployment steps.
-        
-    *   Test basic DAG execution in MWAA to confirm connectivity and permissions.
-        
-2.  **Model Training and Deployment with SageMaker**
-    
-    *   Prepare a SageMaker training job using a pre-trained or retrained LSTM model for stock price prediction.
-        
-    *   Define a deployment pipeline for SageMaker endpoints.
-        
-    *   Integrate SageMaker deployment in the Airflow DAG to automatically deploy the model when retraining is needed.
-        
-    *   Set up monitoring for SageMaker endpoints (e.g., latency, error rates).
-        
-3.  **Data Ingestion with Lambda and S3**
-    
-    *   Create a Lambda function to fetch and upload Amazon stock data to S3.
-        
-    *   Schedule Lambda to run at regular intervals (e.g., daily or weekly) using Amazon CloudWatch Events.
-        
-    *   Integrate the Lambda ingestion step into the Airflow DAG to trigger model updates as new data arrives.
-        
-4.  **Monitoring and Alerting**
-    
-    *   Use CloudWatch to monitor Lambda executions, Airflow DAGs, and SageMaker model endpoints.
-        
-    *   Configure Amazon SNS alerts to notify you of any pipeline failures.
-        
-5.  **Visualization**
-    
-    *   Set up a basic visualization tool (like a simple Jupyter notebook or a Lambda-powered API endpoint) to display and track model predictions.
-        
-    *   Optionally, use QuickSight or an external dashboarding tool for enhanced visualization.
-        
+The project uses Amazon (AMZN) stock price data spanning from **May 15, 1997 to April 12, 2024** (6,772 trading days), containing:
 
-## **Stage #2: Infrastructure as Code (IaC)**
-------------------------------------------
+- **Open**: Opening price
+- **High**: Highest price of the day
+- **Low**: Lowest price of the day
+- **Close**: Closing price
+- **Adj Close**: Adjusted closing price
+- **Volume**: Trading volume
 
-### Goal: Move infrastructure setup to code using Terraform, with automated deployment from GitHub via CodePipeline and CodeBuild.
+### Data Characteristics
+- **Total Records**: 6,770 entries (after processing)
+- **Date Range**: 1997-2024 (27 years of data)
+- **Data Quality**: No missing values, no duplicates
+- **Price Range**: From $0.069792 to $189.05 (adjusted for stock splits)
+- **Average Volume**: 139.1 million shares per day
 
-#### **Tasks:**
+## Notebooks Overview
 
-1.  **Store Code in GitHub**
-    
-    *   Create a GitHub repository to store Terraform configurations, Airflow DAGs, and deployment scripts.
-        
-    *   Use GitHub to track changes and enable version control for all infrastructure and code components.
-        
-2.  **Terraform Configurations for AWS Resources**
-    
-    *   Write Terraform templates for:
-        
-        *   MWAA environment setup, including S3 buckets and IAM roles.
-            
-        *   SageMaker training and deployment resources.
-            
-        *   Lambda function for data ingestion.
-            
-        *   SNS topics for monitoring notifications.
-            
-    *   Define outputs in Terraform for easy reference to essential resources (e.g., S3 bucket name, SageMaker endpoint URL).
-        
-3.  **Automate Terraform Deployment with CodePipeline and CodeBuild**
-    
-    *   Set up CodePipeline with GitHub as the source repository for Terraform configurations.
-        
-    *   Configure CodeBuild to deploy infrastructure using Terraform (include terraform init, plan, and apply steps).
-        
-    *   Test end-to-end deployment by making small changes to the Terraform files and confirming that the pipeline applies updates automatically.
-        
-4.  **Automate Airflow DAG Deployment**
-    
-    *   Set up a separate CodePipeline for Airflow DAGs, triggered when changes to DAG files are pushed to GitHub.
-        
-    *   Configure CodeBuild to upload DAG files to the MWAA S3 bucket.
-        
-    *   Test this pipeline to confirm that new DAGs are automatically deployed and recognized by MWAA.
-        
-5.  **Documentation and Config Management**
-    
-    *   Document the IaC process, including instructions for initializing and maintaining the infrastructure.
-        
-    *   Consider using parameterized variables in Terraform to allow for easy environment setup (e.g., dev, staging, production).
-        
+### 1. Building Dataset (`00 - Building Dataset.ipynb`)
 
-## **Stage #3: Advanced Data Pipeline**
-------------------------------------
+This notebook handles the initial data collection and preparation:
 
-### Goal: Upgrade the data ingestion pipeline using EMR Serverless or Glue for scalability and robust data transformations.
+**Key Features:**
+- Uses `yfinance` library to fetch Amazon stock data
+- Integrates with PySpark for distributed data processing
+- Converts pandas DataFrame to PySpark DataFrame for scalability
+- Saves processed data to HDFS for distributed storage
 
-#### **Tasks:**
+**Technologies Used:**
+- Python with yfinance for data collection
+- PySpark for distributed data processing
+- HDFS for distributed storage
 
-1.  **Choose Between EMR Serverless or Glue**
-    
-    *   Compare EMR Serverless and Glue based on your data transformation requirements, scalability, and cost.
-        
-    *   Decide on the preferred service based on experimentation and research.
-        
-2.  **Build Data Ingestion and Transformation Pipeline**
-    
-    *   If using **Glue**:
-        
-        *   Write Glue jobs to fetch, clean, and transform stock data.
-            
-        *   Set up Glue crawlers (if needed) to catalog data for analysis.
-            
-    *   If using **EMR Serverless**:
-        
-        *   Define Spark jobs for data transformations and ingestion.
-            
-        *   Set up EMR configurations and IAM roles to enable access to S3 and other resources.
-            
-3.  **Integrate the Data Pipeline with MWAA**
-    
-    *   Update the Airflow DAG to trigger Glue or EMR Serverless jobs for data ingestion.
-        
-    *   Configure Airflow task dependencies so that model retraining and deployment occur only after successful data ingestion.
-        
-4.  **Performance and Cost Optimization**
-    
-    *   Set up CloudWatch metrics to monitor the cost and runtime of Glue or EMR jobs.
-        
-    *   Adjust resource configurations for Glue (e.g., workers, memory) or EMR (e.g., node count) based on observed usage.
-        
-5.  **Pipeline Testing and Error Handling**
-    
-    *   Run end-to-end tests to validate the ingestion pipeline and confirm data correctness.
-        
-    *   Implement retry logic and error handling in Airflow for Glue or EMR job failures.
-        
-6.  **Documentation and Final Cleanup**
-    
-    *   Document the data pipeline architecture, configurations, and troubleshooting steps.
-        
-    *   Optimize the DAG structure and Airflow dependencies for streamlined production use.
+**Data Processing Steps:**
+1. Fetch AMZN stock data using yfinance
+2. Convert to PySpark DataFrame for distributed processing
+3. Store data in HDFS at `/ca3/amazon.csv`
+
+### 2. Data Exploration (`01 - Data exploration.ipynb`)
+
+Comprehensive exploratory data analysis using PySpark with Pandas API:
+
+**Key Analysis:**
+- **Statistical Summary**: Comprehensive descriptive statistics
+- **Data Quality Assessment**: Verification of data completeness and integrity
+- **Feature Engineering**: Creation of `avg_price` feature (mean of High, Low, Adj Close)
+- **Temporal Analysis**: Addition of month and year columns for time-based analysis
+- **Trend Visualization**: Daily and monthly stock price trend analysis
+
+**Key Findings:**
+- Stock shows strong upward trend over 27-year period
+- Data exhibits non-stationary behavior (price depends on time)
+- Significant price volatility with periods of rapid growth
+- Clear seasonal and temporal patterns in stock performance
+
+**Visualizations:**
+- Daily stock price trends over entire period
+- Monthly aggregated price movements
+- Statistical distribution analysis
+
+**Technologies Used:**
+- PySpark with Pandas API for large-scale data processing
+- Matplotlib and Seaborn for visualization
+- HDFS for data storage and retrieval
+
+## Current Implementation Status
+
+This project currently includes:
+- ✅ **Data Collection**: Automated fetching of Amazon stock data using yfinance
+- ✅ **Data Processing**: PySpark-based distributed data processing and storage
+- ✅ **Exploratory Analysis**: Comprehensive statistical analysis and visualization
+- ✅ **Feature Engineering**: Creation of derived features for ML modeling
+- 🔄 **AWS Implementation**: Planned (see todo.md for implementation roadmap)
+
+## Technical Stack
+
+### Current Implementation
+- **PySpark**: Distributed data processing and analysis
+- **Pandas API on Spark**: Familiar pandas interface for large-scale data
+- **HDFS**: Distributed file system for data storage
+- **Python**: Primary programming language with yfinance for data collection
+- **Jupyter Notebooks**: Interactive data analysis and visualization
+
+### Planned AWS Integration (see todo.md)
+- **Amazon SageMaker**: Model training and deployment platform
+- **MWAA (Managed Airflow)**: Workflow orchestration
+- **Lambda**: Serverless data ingestion
+- **S3**: Object storage for data and models
+- **CloudWatch**: Monitoring and logging
+- **SNS**: Notification services
+- **EMR Serverless/Glue**: Advanced data processing
+- **Terraform**: Infrastructure as Code
+- **CodePipeline/CodeBuild**: CI/CD automation
+
+## Data Insights
+
+### Price Evolution
+- **Starting Price** (1997): ~$0.10 (split-adjusted)
+- **Peak Price**: $189.05
+- **Growth**: Over 1,800x increase over 27 years
+- **Volatility**: High volatility with significant price swings
+
+### Volume Analysis
+- **Average Daily Volume**: 139.1 million shares
+- **Volume Range**: 9.7M to 2.1B shares
+- **Liquidity**: Highly liquid stock with consistent trading activity
+
+### Temporal Patterns
+- **Long-term Trend**: Strong upward trajectory
+- **Seasonality**: Monthly aggregation reveals seasonal patterns
+- **Market Events**: Data captures major market events and company milestones
+
+## Next Steps
+
+See `todo.md` for a detailed implementation roadmap to deploy this project on AWS with full ML orchestration, monitoring, and automation capabilities.
+
+## Getting Started
+
+### Current Setup
+1. **Prerequisites**: Python 3.8+, Apache Spark, Jupyter Notebooks
+2. **Installation**: Install required packages (yfinance, pyspark, pandas, matplotlib, seaborn)
+3. **Usage**: 
+   - Run `00 - Building Dataset.ipynb` to collect Amazon stock data
+   - Execute `01 - Data exploration.ipynb` for comprehensive analysis
+   - Data is stored in HDFS for distributed processing
+
+### AWS Implementation
+For AWS deployment and ML pipeline implementation, refer to the detailed roadmap in `todo.md`.
+
+## Contributing
+
+This project follows a structured development approach with clear separation between data processing, model development, and infrastructure management. Contributions should align with the three-stage implementation plan outlined above.
+
+## License
+
+This project is for educational and research purposes, demonstrating best practices in ML pipeline development and AWS cloud architecture.
